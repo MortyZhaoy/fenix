@@ -1,0 +1,38 @@
+name: Build
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - 'v*'
+  schedule:
+    - cron: '0 16 * * 0'
+
+jobs:
+  build_test:
+    name: Build
+    runs-on: self-hosted
+    timeout-minutes: 720
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Get Env
+        run: env
+
+#      - name: Ckeck Build
+#        timeout-minutes: 720
+#        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+#        run: scripts/tests/build_test -s Install-deps -e CHK
+
+      - name: Release Build
+        timeout-minutes: 720
+        if: ${{ github.event_name == 'push' && github.ref != 'refs/heads/master' }}
+        run: scripts/tests/build_test -s Install-deps -e REL
+
+      - name: Rootfs Cache Build
+        timeout-minutes: 720
+        if: ${{ github.event_name == 'schedule' && github.ref == 'refs/heads/master' }}
+        run: scripts/tests/build_test -s Install-deps -e "\-CACHE"
